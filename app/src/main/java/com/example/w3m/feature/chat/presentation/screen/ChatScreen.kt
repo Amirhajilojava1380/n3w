@@ -22,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -90,9 +91,11 @@ fun ChatScreen(
 
     fun addAttachments(uris: List<Uri>, isImage: Boolean) {
         val remainingSlots = 3 - attachments.size
+        val existingUris = attachments.map { it.uri }.toSet()
         if (remainingSlots > 0) {
             attachments += uris
                 .distinct()
+                .filterNot { it in existingUris }
                 .take(remainingSlots)
                 .map { uri -> ChatAttachment(uri = uri, isImage = isImage) }
         }
@@ -189,10 +192,12 @@ fun ChatScreen(
                                 .padding(start = 12.dp, end = 12.dp, top = 10.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(
+                            itemsIndexed(
                                 items = attachments,
-                                key = { attachment -> attachment.uri.toString() }
-                            ) { attachment ->
+                                key = { index, attachment ->
+                                    "${index}_${attachment.uri}_${attachment.isImage}"
+                                }
+                            ) { _, attachment ->
                                 Box(
                                     modifier = Modifier
                                         .size(72.dp)
