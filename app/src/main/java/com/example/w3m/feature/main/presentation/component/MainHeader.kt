@@ -53,7 +53,7 @@ fun MainHeader(
                             contentDescription = "باز کردن منو",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(10.dp),
+                                .padding(12.dp),
                             tint = Color(0xFF111827)
                         )
                     }
