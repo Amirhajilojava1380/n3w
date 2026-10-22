@@ -118,6 +118,7 @@ fun ChatScreen(
         keyboardController?.show()
     }
     val focusManager = LocalFocusManager.current
+    val canSend = messageText.isNotBlank() || attachments.isNotEmpty()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -381,7 +382,7 @@ fun ChatScreen(
 
                     IconButton(
                         onClick = {
-                            if (messageText.isNotBlank()) {
+                            if (canSend) {
                                 sendMessage()
                             } else {
                                 isListening = !isListening
@@ -390,30 +391,26 @@ fun ChatScreen(
                         modifier = Modifier
                             .size(48.dp)
                             .background(
-                                color = if (messageText.isNotBlank()) {
-                                    Color(0xFF111111)
-                                } else {
-                                    Color(0xFFEFF2F6)
-                                },
+                                color = if (canSend) Color(0xFF3B82F6) else Color(0xFFEFF2F6),
                                 shape = CircleShape
                             )
                     ) {
                         Icon(
                             painter = painterResource(
-                                if (messageText.isNotBlank()) {
-                                    R.drawable.send_message
+                                if (canSend) {
+                                    R.drawable.send_up
                                 } else {
                                     R.drawable.mic
                                 }
                             ),
-                            contentDescription = if (messageText.isNotBlank()) {
+                            contentDescription = if (canSend) {
                                 "ارسال پیام"
                             } else {
                                 "ضبط صدا"
                             },
                             modifier = Modifier.size(24.dp),
                             tint = when {
-                                messageText.isNotBlank() -> Color.White
+                                canSend -> Color.White
                                 isListening -> Color(0xFF2563EB)
                                 else -> Color(0xFF111827)
                             }
