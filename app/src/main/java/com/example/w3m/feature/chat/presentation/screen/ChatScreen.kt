@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -58,6 +62,8 @@ fun ChatScreen(
     var isListening by rememberSaveable { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf<ChatMessage>() }
+    val inputFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     fun sendMessage() {
         val message = messageText.trim()
@@ -152,7 +158,12 @@ fun ChatScreen(
                     }
 
                     Surface(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                inputFocusRequester.requestFocus()
+                                keyboardController?.show()
+                            },
                         color = Color.White,
                         shadowElevation = 0.dp
                     ) {
@@ -165,7 +176,9 @@ fun ChatScreen(
                                     messageText = it
                                     isListening = false
                                 },
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(inputFocusRequester),
                                 placeholder = {
                                     Text(
                                         text = if (isListening) "در حال ضبط صدا..." else "پیام خود را بنویسید...",
