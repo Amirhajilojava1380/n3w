@@ -1,5 +1,8 @@
 package com.example.w3m.feature.chat.presentation.screen
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +69,20 @@ fun ChatScreen(
     var isListening by rememberSaveable { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf<ChatMessage>() }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            messages += ChatMessage(text = "تصویر انتخاب شد", isMine = true)
+        }
+    }
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            messages += ChatMessage(text = "فایل انتخاب شد", isMine = true)
+        }
+    }
     val inputFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -166,11 +183,7 @@ fun ChatScreen(
                                 DropdownMenu(
                                     expanded = showAttachmentMenu,
                                     onDismissRequest = { showAttachmentMenu = false },
-                                    shape = MaterialTheme.shapes.extraSmall,
-                                    containerColor = Color.White,
-                                    tonalElevation = 0.dp,
-                                    shadowElevation = 6.dp,
-                                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                                    modifier = Modifier.background(Color.White)
                                 ) {
                                     DropdownMenuItem(
                                         text = { Text("انتخاب تصویر", fontFamily = Yekan) },
@@ -182,7 +195,11 @@ fun ChatScreen(
                                                 tint = Color(0xFF111827)
                                             )
                                         },
-                                        onClick = { showAttachmentMenu = false }
+
+                                        onClick = {
+                                            showAttachmentMenu = false
+                                            imagePickerLauncher.launch("image/*")
+                                        }
                                     )
                                     DropdownMenuItem(
                                         text = { Text("انتخاب فایل", fontFamily = Yekan) },
@@ -194,7 +211,10 @@ fun ChatScreen(
                                                 tint = Color(0xFF111827)
                                             )
                                         },
-                                        onClick = { showAttachmentMenu = false }
+                                        onClick = {
+                                            showAttachmentMenu = false
+                                            filePickerLauncher.launch(arrayOf("*/*"))
+                                        }
                                     )
                                 }
                             }
