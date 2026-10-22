@@ -3,6 +3,8 @@ package com.example.w3m.feature.chat.presentation.screen
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -12,16 +14,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -48,11 +54,15 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.w3m.R
 import com.example.w3m.feature.intro.presentation.screen.ui.theme.Yekan
 
@@ -61,6 +71,12 @@ private data class ChatMessage(
     val isMine: Boolean
 )
 
+private data class ChatAttachment(
+    val uri: Uri,
+    val isImage: Boolean
+)
+
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier
@@ -69,19 +85,28 @@ fun ChatScreen(
     var isListening by rememberSaveable { mutableStateOf(false) }
     var showAttachmentMenu by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf<ChatMessage>() }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            messages += ChatMessage(text = "تصویر انتخاب شد", isMine = true)
+    val attachments = remember { mutableStateListOf<ChatAttachment>() }
+    var previewImage by remember { mutableStateOf<ChatAttachment?>(null) }
+
+    fun addAttachments(uris: List<Uri>, isImage: Boolean) {
+        val remainingSlots = 3 - attachments.size
+        if (remainingSlots > 0) {
+            attachments += uris
+                .distinct()
+                .take(remainingSlots)
+                .map { uri -> ChatAttachment(uri = uri, isImage = isImage) }
         }
     }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        addAttachments(uris, isImage = true)
+    }
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            messages += ChatMessage(text = "فایل انتخاب شد", isMine = true)
-        }
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris: List<Uri> ->
+        addAttachments(uris, isImage = false)
     }
     val inputFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -96,9 +121,11 @@ fun ChatScreen(
 
     fun sendMessage() {
         val message = messageText.trim()
-        if (message.isNotEmpty()) {
-            messages += ChatMessage(text = message, isMine = true)
+        if (message.isNotEmpty() || attachments.isNotEmpty()) {
+            val sentText = if (message.isNotEmpty()) message else "پیوست ارسال شد"
+            messages += ChatMessage(text = sentText, isMine = true)
             messageText = ""
+            attachments.clear()
         }
     }
 
@@ -151,12 +178,83 @@ fun ChatScreen(
                 border = BorderStroke(0.5.dp, Color(0xFFE1E5EA)),
                 shadowElevation = 0.dp
             ) {
-                Row(
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (attachments.isNotEmpty()) {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(88.dp)
+                                .padding(start = 12.dp, end = 12.dp, top = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(
+                                items = attachments,
+                                key = { attachment -> attachment.uri.toString() }
+                            ) { attachment ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(72.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFFF1F3F5))
+                                ) {
+                                    if (attachment.isImage) {
+                                        GlideImage(
+                                            model = attachment.uri,
+                                            contentDescription = "پیش‌نمایش تصویر",
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable { previewImage = attachment },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(8.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.folder),
+                                                contentDescription = "فایل انتخاب شده",
+                                                modifier = Modifier.size(28.dp),
+                                                tint = Color(0xFF111827)
+                                            )
+                                            Text(
+                                                text = "فایل",
+                                                fontFamily = Yekan,
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF111827)
+                                            )
+                                        }
+                                    }
+
+                                    IconButton(
+                                        onClick = { attachments.remove(attachment) },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Close,
+                                            contentDescription = "حذف پیوست",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = Color(0xFF111827)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                ) {
+                    ) {
                     Box {
                         IconButton(
                             onClick = { showAttachmentMenu = true },
@@ -312,11 +410,46 @@ fun ChatScreen(
                             }
                         )
                     }
+                    }
                 }
             }
         }
     }
 
+    previewImage?.let { image ->
+        Dialog(
+            onDismissRequest = { previewImage = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = Color.Black
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    GlideImage(
+                        model = image.uri,
+                        contentDescription = "تصویر بزرگ شده",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                    IconButton(
+                        onClick = { previewImage = null },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .size(48.dp)
+                            .background(Color.Black.copy(alpha = 0.55f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = "بستن تصویر",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
 
 }
 @Composable
