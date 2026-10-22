@@ -6,12 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomAppBar
@@ -79,29 +73,13 @@ fun MainPagerScreen(
             },
 
             topBar = {
-                AnimatedContent(
-                    targetState = pagerState.currentPage == 0,
-                    transitionSpec = {
-                        (
-                            slideInHorizontally(
-                                initialOffsetX = { width -> width / 2 }
-                            ) + fadeIn()
-                        ) togetherWith (
-                            slideOutHorizontally(
-                                targetOffsetX = { width -> -width / 2 }
-                            ) + fadeOut()
-                        )
-                    },
-                    label = "main-header-transition"
-                ) { isChatPage ->
-                    if (isChatPage) {
-                        MainHeader(
-                            showProfile = false,
-                            showMenuButton = true
-                        )
-                    } else {
-                        MainHeader()
-                    }
+                if (pagerState.currentPage == 0) {
+                    MainHeader(
+                        showProfile = false,
+                        showMenuButton = true
+                    )
+                } else {
+                    MainHeader()
                 }
             },
 
