@@ -2,7 +2,10 @@ package com.example.w3m.feature.chat.presentation.screen
 
 import android.Manifest
 import android.graphics.Bitmap
+import android.media.MediaRecorder
 import android.net.Uri
+import java.io.File
+import kotlin.math.sin
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -42,6 +46,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +58,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,6 +72,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import com.example.w3m.R
 import com.example.w3m.feature.intro.presentation.screen.ui.theme.Yekan
 
@@ -93,6 +110,58 @@ fun ChatScreen(
     val inputFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     var previewImage by remember { mutableStateOf<ChatAttachment?>(null) }
+    val context = LocalContext.current
+    var mediaRecorder by remember { mutableStateOf<MediaRecorder?>(null) }
+    var recordingFile by remember { mutableStateOf<File?>(null) }
+    var recordingSeconds by rememberSaveable { mutableStateOf(0) }
+
+    fun startRecording() {
+        if (mediaRecorder != null) return
+
+        val outputFile = File(
+            context.cacheDir,
+            "voice_${System.currentTimeMillis()}.m4a"
+        )
+
+        try {
+            MediaRecorder().apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                setOutputFile(outputFile.absolutePath)
+                prepare()
+                start()
+                mediaRecorder = this
+                recordingFile = outputFile
+                recordingSeconds = 0
+                isListening = true
+            }
+        } catch (_: Exception) {
+            mediaRecorder?.release()
+            mediaRecorder = null
+            outputFile.delete()
+        }
+    }
+
+    fun stopRecording(saveRecording: Boolean) {
+        val recorder = mediaRecorder ?: return
+        try {
+            recorder.stop()
+        } catch (_: RuntimeException) {
+            recordingFile?.delete()
+        } finally {
+            recorder.release()
+            mediaRecorder = null
+            if (saveRecording && recordingFile?.exists() == true) {
+                messages += ChatMessage("پیام صوتی ضبط شد", isMine = true)
+            } else {
+                recordingFile?.delete()
+            }
+            recordingFile = null
+            recordingSeconds = 0
+            isListening = false
+        }
+    }
 
     fun addAttachments(uris: List<Uri>, isImage: Boolean) {
         val remainingSlots = 3 - attachments.size
@@ -136,13 +205,28 @@ fun ChatScreen(
             cameraLauncher.launch(null)
         }
     }
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) startRecording()
+    }
     val focusManager = LocalFocusManager.current
     val canSend = messageText.isNotBlank() || attachments.isNotEmpty()
 
     DisposableEffect(Unit) {
         onDispose {
+            stopRecording(saveRecording = false)
             focusManager.clearFocus(force = true)
             keyboardController?.hide()
+        }
+    }
+
+    LaunchedEffect(isListening) {
+        if (isListening) {
+            while (isActive) {
+                delay(1000)
+                recordingSeconds++
+            }
         }
     }
 
@@ -205,9 +289,16 @@ fun ChatScreen(
                 border = BorderStroke(0.5.dp, Color(0xFFE1E5EA)),
                 shadowElevation = 0.dp
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                if (isListening) {
+                    VoiceRecordingBar(
+                        elapsedSeconds = recordingSeconds,
+                        onCancel = { stopRecording(saveRecording = false) },
+                        onStop = { stopRecording(saveRecording = true) }
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                     if (attachments.isNotEmpty()) {
                         LazyRow(
                             modifier = Modifier
@@ -441,7 +532,9 @@ fun ChatScreen(
                             if (canSend) {
                                 sendMessage()
                             } else {
-                                isListening = !isListening
+                                focusManager.clearFocus(force = true)
+                                keyboardController?.hide()
+                                audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                             }
                         },
                         modifier = Modifier
@@ -473,6 +566,7 @@ fun ChatScreen(
                         )
                     }
                     }
+                }
                 }
             }
         }
@@ -514,6 +608,100 @@ fun ChatScreen(
     }
 
 }
+
+@Composable
+private fun VoiceRecordingBar(
+    elapsedSeconds: Int,
+    onCancel: () -> Unit,
+    onStop: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IconButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .size(48.dp)
+                .background(Color(0xFFEFF2F6), CircleShape)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = "لغو ضبط صدا",
+                modifier = Modifier.size(26.dp),
+                tint = Color(0xFF111827)
+            )
+        }
+
+        VoiceWaveform(
+            modifier = Modifier
+                .weight(1f)
+                .height(48.dp)
+        )
+
+        Text(
+            text = "%d:%02d".format(elapsedSeconds / 60, elapsedSeconds % 60),
+            color = Color(0xFF596579),
+            fontFamily = Yekan,
+            fontSize = 15.sp
+        )
+
+        IconButton(
+            onClick = onStop,
+            modifier = Modifier
+                .size(48.dp)
+                .background(Color(0xFFFF3B30), CircleShape)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.stop),
+                contentDescription = "توقف ضبط صدا",
+                modifier = Modifier.size(20.dp),
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+private fun VoiceWaveform(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "voice-waveform")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = (Math.PI * 2).toFloat(),
+        animationSpec = infiniteRepeatable(
+            animation = tween(900, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "voice-waveform-phase"
+    )
+
+    Canvas(modifier = modifier) {
+        val barCount = 28
+        val barWidth = 4.dp.toPx()
+        val gap = 3.dp.toPx()
+        val totalWidth = barCount * barWidth + (barCount - 1) * gap
+        val startX = ((size.width - totalWidth) / 2f).coerceAtLeast(0f)
+
+        repeat(barCount) { index ->
+            val wave = ((sin(phase + index * 0.72f) + 1f) / 2f)
+            val barHeight = 8.dp.toPx() + wave * (size.height - 8.dp.toPx())
+            val x = startX + index * (barWidth + gap)
+            val alpha = 0.45f + wave * 0.55f
+
+            drawRoundRect(
+                color = Color(0xFF3B82F6).copy(alpha = alpha),
+                topLeft = Offset(x, (size.height - barHeight) / 2f),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f)
+            )
+        }
+    }
+}
+
 @Composable
 private fun MessageBubble(message: ChatMessage) {
     Row(
