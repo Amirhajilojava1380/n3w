@@ -190,30 +190,43 @@ fun ChatScreen(
                 }
 
                 IconButton(
-                    onClick = { isListening = !isListening },
+                    onClick = {
+                        if (messageText.isNotBlank()) {
+                            sendMessage()
+                        } else {
+                            isListening = !isListening
+                        }
+                    },
                     modifier = Modifier
                         .size(48.dp)
-                        .background(Color(0xFFEFF2F6), CircleShape)
+                        .background(
+                            color = if (messageText.isNotBlank()) {
+                                Color(0xFF111111)
+                            } else {
+                                Color(0xFFEFF2F6)
+                            },
+                            shape = CircleShape
+                        )
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.mic),
-                        contentDescription = "ضبط صدا",
+                        painter = painterResource(
+                            if (messageText.isNotBlank()) {
+                                R.drawable.send_message
+                            } else {
+                                R.drawable.mic
+                            }
+                        ),
+                        contentDescription = if (messageText.isNotBlank()) {
+                            "ارسال پیام"
+                        } else {
+                            "ضبط صدا"
+                        },
                         modifier = Modifier.size(24.dp),
-                        tint = if (isListening) Color(0xFF2563EB) else Color(0xFF111827)
-                    )
-                }
-
-                IconButton(
-                    onClick = { sendMessage() },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Color(0xFF111111), CircleShape)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.send_message),
-                        contentDescription = "ارسال پیام",
-                        modifier = Modifier.size(24.dp),
-                        tint = Color.White
+                        tint = when {
+                            messageText.isNotBlank() -> Color.White
+                            isListening -> Color(0xFF2563EB)
+                            else -> Color(0xFF111827)
+                        }
                     )
                 }
             }
