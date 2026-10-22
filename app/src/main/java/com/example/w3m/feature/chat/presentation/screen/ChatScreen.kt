@@ -87,6 +87,8 @@ fun ChatScreen(
     var showAttachmentMenu by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf<ChatMessage>() }
     val attachments = remember { mutableStateListOf<ChatAttachment>() }
+    val inputFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     var previewImage by remember { mutableStateOf<ChatAttachment?>(null) }
 
     fun addAttachments(uris: List<Uri>, isImage: Boolean) {
@@ -105,14 +107,16 @@ fun ChatScreen(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
         addAttachments(uris, isImage = true)
+        inputFocusRequester.requestFocus()
+        keyboardController?.show()
     }
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<Uri> ->
         addAttachments(uris, isImage = false)
+        inputFocusRequester.requestFocus()
+        keyboardController?.show()
     }
-    val inputFocusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
     DisposableEffect(Unit) {
