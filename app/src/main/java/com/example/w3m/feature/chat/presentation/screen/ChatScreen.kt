@@ -154,18 +154,43 @@ fun ChatScreen(
                             )
                         }
 
-                        DropdownMenu(
-                            expanded = showAttachmentMenu,
-                            onDismissRequest = { showAttachmentMenu = false }
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            LocalLayoutDirection provides LayoutDirection.Rtl
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("انتخاب تصویر", fontFamily = Yekan) },
-                                onClick = { showAttachmentMenu = false }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("انتخاب فایل", fontFamily = Yekan) },
-                                onClick = { showAttachmentMenu = false }
-                            )
+                            DropdownMenu(
+                                expanded = showAttachmentMenu,
+                                onDismissRequest = { showAttachmentMenu = false },
+                                shape = RoundedCornerShape(16.dp),
+                                containerColor = Color.White,
+                                tonalElevation = 0.dp,
+                                shadowElevation = 6.dp,
+                                border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("انتخاب تصویر", fontFamily = Yekan) },
+                                    leadingIcon = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.image),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(22.dp),
+                                            tint = Color(0xFF111827)
+                                        )
+                                    },
+                                    onClick = { showAttachmentMenu = false }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("انتخاب فایل", fontFamily = Yekan) },
+                                    leadingIcon = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.folder),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(22.dp),
+                                            tint = Color(0xFF111827)
+                                        )
+                                    },
+                                    onClick = { showAttachmentMenu = false }
+                                )
+                            }
                         }
                     }
 
