@@ -2,6 +2,8 @@ package com.example.w3m.feature.main.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -41,6 +43,7 @@ fun MainPagerScreen(
         val scope = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
+        val isKeyboardVisible = WindowInsets.isImeVisible
 
         LaunchedEffect(pagerState.currentPage) {
             if (pagerState.currentPage != 0) {
@@ -53,17 +56,18 @@ fun MainPagerScreen(
             modifier = Modifier.fillMaxSize(),
 
             bottomBar = {
-                BottomAppBar(
-                    modifier = Modifier.background(Color.Transparent),
-                    containerColor = Color.Transparent,
-                    tonalElevation = 0.dp
-                ) {
-                    NavigationBarItem(
-                        pagerState = pagerState,
-                        scope = scope
-                    )
+                if (!isKeyboardVisible) {
+                    BottomAppBar(
+                        modifier = Modifier.background(Color.Transparent),
+                        containerColor = Color.Transparent,
+                        tonalElevation = 0.dp
+                    ) {
+                        NavigationBarItem(
+                            pagerState = pagerState,
+                            scope = scope
+                        )
+                    }
                 }
-
             },
 
             topBar = {
