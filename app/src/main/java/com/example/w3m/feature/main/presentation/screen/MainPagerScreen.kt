@@ -7,10 +7,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomAppBar
@@ -66,7 +65,7 @@ fun MainPagerScreen(
                 AnimatedVisibility(
                     visible = !isKeyboardVisible,
                     enter = slideInVertically { height -> height } + fadeIn(),
-                    exit = slideOutVertically { height -> height } + fadeOut()
+                    exit = ExitTransition.None
                 ) {
                     BottomAppBar(
                         modifier = Modifier.background(Color.Transparent),

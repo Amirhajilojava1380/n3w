@@ -1,11 +1,10 @@
 package com.example.w3m.feature.main.presentation.component
 
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,48 +43,32 @@ fun MainHeader(
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         TopAppBar(
             title = {
-                AnimatedContent(
-                    targetState = showProfile,
-                    transitionSpec = {
-                        (
-                            slideInHorizontally { width -> width / 2 } + fadeIn()
-                        ) togetherWith (
-                            slideOutHorizontally { width -> -width / 2 } + fadeOut()
-                        )
-                    },
-                    label = "profile-header-transition"
-                ) { profileVisible ->
-                    if (profileVisible) {
-                        IconProfile()
-                    }
+                AnimatedVisibility(
+                    visible = showProfile,
+                    enter = slideInHorizontally { width -> width / 2 } + fadeIn(),
+                    exit = slideOutHorizontally { width -> -width / 2 } + fadeOut()
+                ) {
+                    IconProfile()
                 }
             },
             navigationIcon = {
-                AnimatedContent(
-                    targetState = showMenuButton,
-                    transitionSpec = {
-                        (
-                            slideInHorizontally { width -> width / 2 } + fadeIn()
-                        ) togetherWith (
-                            slideOutHorizontally { width -> -width / 2 } + fadeOut()
+                AnimatedVisibility(
+                    visible = showMenuButton,
+                    enter = slideInHorizontally { width -> width / 2 } + fadeIn(),
+                    exit = slideOutHorizontally { width -> -width / 2 } + fadeOut()
+                ) {
+                    IconButton(
+                        onClick = onMenuClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.menum),
+                            contentDescription = "باز کردن منو",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            tint = Color(0xFF111827)
                         )
-                    },
-                    label = "menu-header-transition"
-                ) { menuVisible ->
-                    if (menuVisible) {
-                        IconButton(
-                            onClick = onMenuClick,
-                            modifier = Modifier.size(48.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.menum),
-                                contentDescription = "باز کردن منو",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(12.dp),
-                                tint = Color(0xFF111827)
-                            )
-                        }
                     }
                 }
             },
