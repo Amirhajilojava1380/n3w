@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">w3m</string>
+    <string name="title_activity_intro_screen">IntroScreenActivity</string>
+    <string name="title_activity_auth">AuthActivity</string>
+    <string name="title_activity_verify_code">VerifyCodeActivity</string>
+    <string name="title_activity_main_screen">MainScreen</string>
+    <string name="title_activity_bots">BotsActivity</string>
+    <string name="title_activity_channels">ChannelsActivity</string>
+    <string name="title_activity_groups">GroupsActivity</string>
+    <string name="title_activity_users">UsersActivity</string>
+</resources>
