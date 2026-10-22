@@ -17,7 +17,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -26,6 +30,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.delay
 import com.example.w3m.feature.bots.presentation.screen.BotsGreeting
 import com.example.w3m.feature.chat.presentation.screen.ChatScreen
 import com.example.w3m.feature.groups.presentation.screen.GroupsGreeting
@@ -50,6 +55,12 @@ fun MainPagerScreen(
         val focusManager = LocalFocusManager.current
         val keyboardController = LocalSoftwareKeyboardController.current
         val isKeyboardVisible = WindowInsets.isImeVisible
+        var showBalance by rememberSaveable { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            delay(3000)
+            showBalance = true
+        }
 
         LaunchedEffect(pagerState.currentPage) {
             if (pagerState.currentPage != 0) {
@@ -83,11 +94,12 @@ fun MainPagerScreen(
             topBar = {
                 if (pagerState.currentPage == 0) {
                     MainHeader(
+                        showBalance = showBalance,
                         showProfile = false,
                         showMenuButton = true
                     )
                 } else {
-                    MainHeader()
+                    MainHeader(showBalance = showBalance)
                 }
             },
 

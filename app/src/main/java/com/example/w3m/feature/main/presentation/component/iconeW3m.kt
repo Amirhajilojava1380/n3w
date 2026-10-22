@@ -21,13 +21,16 @@ import com.example.w3m.R
 import com.example.w3m.feature.main.presentation.screen.ui.theme.W3mTheme
 
 @Composable
-fun IconW3m(modifier: Modifier = Modifier) {
+fun IconW3m(
+    modifier: Modifier = Modifier,
+    showBalance: Boolean = false
+) {
     Row (
         modifier = modifier.padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.Center ,
         verticalAlignment = Alignment.CenterVertically
     ){
-        HeaderBalance()
+        HeaderBalance(showBalance = showBalance)
 
 
         Box(

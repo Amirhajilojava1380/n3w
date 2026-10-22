@@ -21,9 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,23 +41,14 @@ import androidx.compose.ui.unit.sp
 import com.example.w3m.R
 import com.example.w3m.feature.intro.presentation.screen.ui.theme.Gilroy
 import com.example.w3m.feature.main.presentation.bottomsheet.WalletChargeBottomSheet
-import kotlinx.coroutines.delay
 
 @Composable
 fun HeaderBalance(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showBalance: Boolean = false
 ) {
     var showWalletSheet by remember {
         mutableStateOf(false)
-    }
-
-    var showBalance by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(Unit) {
-        delay(3000)
-        showBalance = true
     }
 
     Box(

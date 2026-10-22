@@ -35,6 +35,7 @@ fun MainHeader(
     balance: String = "9,610 تومان",
     onRefresh: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    showBalance: Boolean = false,
     showProfile: Boolean = true,
     showMenuButton: Boolean = false,
     onMenuClick: () -> Unit = {}
@@ -72,7 +73,7 @@ fun MainHeader(
                 }
             },
             actions = {
-                IconW3m()
+                IconW3m(showBalance = showBalance)
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.White
