@@ -1,6 +1,7 @@
 package com.example.w3m.feature.chat.presentation.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -107,13 +108,22 @@ fun ChatScreen(
         androidx.compose.runtime.CompositionLocalProvider(
             LocalLayoutDirection provides LayoutDirection.Ltr
         ) {
-            Row(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                shape = RoundedCornerShape(32.dp),
+                color = Color.White,
+                border = BorderStroke(1.dp, Color(0xFFE1E5EA)),
+                shadowElevation = 1.dp
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
             Box {
                 IconButton(
                     onClick = { showAttachmentMenu = true },
