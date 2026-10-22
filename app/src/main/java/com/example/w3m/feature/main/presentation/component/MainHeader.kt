@@ -1,13 +1,17 @@
 package com.example.w3m.feature.main.presentation.component
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,32 +47,76 @@ fun MainHeader(
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         TopAppBar(
             title = {
-                AnimatedVisibility(
-                    visible = showProfile,
-                    enter = slideInHorizontally { width -> width / 2 } + fadeIn(),
-                    exit = slideOutHorizontally { width -> -width / 2 } + fadeOut()
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(56.dp)
                 ) {
-                    IconProfile()
+                    AnimatedContent(
+                        targetState = showProfile,
+                        transitionSpec = {
+                            (
+                                slideInHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(450),
+                                    initialOffsetX = { width -> width / 2 }
+                                ) + fadeIn(
+                                    animationSpec = androidx.compose.animation.core.tween(450)
+                                )
+                            ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(450),
+                                    targetOffsetX = { width -> -width / 2 }
+                                ) + fadeOut(
+                                    animationSpec = androidx.compose.animation.core.tween(450)
+                                )
+                            )
+                        },
+                        label = "profile-header-transition"
+                    ) { profileVisible ->
+                        if (profileVisible) {
+                            IconProfile()
+                        }
+                    }
                 }
             },
             navigationIcon = {
-                AnimatedVisibility(
-                    visible = showMenuButton,
-                    enter = slideInHorizontally { width -> width / 2 } + fadeIn(),
-                    exit = slideOutHorizontally { width -> -width / 2 } + fadeOut()
-                ) {
-                    IconButton(
-                        onClick = onMenuClick,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.menum),
-                            contentDescription = "باز کردن منو",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(12.dp),
-                            tint = Color(0xFF111827)
-                        )
+                Box(modifier = Modifier.size(48.dp)) {
+                    AnimatedContent(
+                        targetState = showMenuButton,
+                        transitionSpec = {
+                            (
+                                slideInHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(450),
+                                    initialOffsetX = { width -> width / 2 }
+                                ) + fadeIn(
+                                    animationSpec = androidx.compose.animation.core.tween(450)
+                                )
+                            ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = androidx.compose.animation.core.tween(450),
+                                    targetOffsetX = { width -> -width / 2 }
+                                ) + fadeOut(
+                                    animationSpec = androidx.compose.animation.core.tween(450)
+                                )
+                            )
+                        },
+                        label = "menu-header-transition"
+                    ) { menuVisible ->
+                        if (menuVisible) {
+                            IconButton(
+                                onClick = onMenuClick,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.menum),
+                                    contentDescription = "باز کردن منو",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    tint = Color(0xFF111827)
+                                )
+                            }
+                        }
                     }
                 }
             },
