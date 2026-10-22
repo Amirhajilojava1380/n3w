@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -157,12 +158,11 @@ fun ChatScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box {
-                        Surface(
+                        IconButton(
                             onClick = { showAttachmentMenu = true },
-                            modifier = Modifier.size(48.dp),
-                            shape = CircleShape,
-                            color = Color(0xFFEFF2F6),
-                            tonalElevation = 0.dp
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(Color(0xFFEFF2F6), CircleShape)
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.add),
@@ -272,7 +272,7 @@ fun ChatScreen(
                         }
                     }
 
-                    Surface(
+                    IconButton(
                         onClick = {
                             if (messageText.isNotBlank()) {
                                 sendMessage()
@@ -282,13 +282,14 @@ fun ChatScreen(
                         },
                         modifier = Modifier
                             .size(48.dp)
-                        shape = CircleShape,
-                        color = if (messageText.isNotBlank()) {
-                            Color(0xFF111111)
-                        } else {
-                            Color(0xFFEFF2F6)
-                        },
-                        tonalElevation = 0.dp
+                            .background(
+                                color = if (messageText.isNotBlank()) {
+                                    Color(0xFF111111)
+                                } else {
+                                    Color(0xFFEFF2F6)
+                                },
+                                shape = CircleShape
+                            )
                     ) {
                         Icon(
                             painter = painterResource(
