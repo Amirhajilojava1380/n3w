@@ -1,10 +1,17 @@
 package com.example.w3m.feature.main.presentation.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomAppBar
@@ -28,6 +35,7 @@ import com.example.w3m.feature.main.presentation.component.MainHeader
 import com.example.w3m.feature.main.presentation.component.NavigationBarItem
 import com.example.w3m.feature.users.presentation.screen.UsersGreeting
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MainPagerScreen(
     navController: NavHostController
@@ -71,13 +79,29 @@ fun MainPagerScreen(
             },
 
             topBar = {
-                if (pagerState.currentPage == 0) {
-                    MainHeader(
-                        showProfile = false,
-                        showMenuButton = true
-                    )
-                } else {
-                    MainHeader()
+                AnimatedContent(
+                    targetState = pagerState.currentPage == 0,
+                    transitionSpec = {
+                        (
+                            slideInHorizontally(
+                                initialOffsetX = { width -> width / 2 }
+                            ) + fadeIn()
+                        ) togetherWith (
+                            slideOutHorizontally(
+                                targetOffsetX = { width -> -width / 2 }
+                            ) + fadeOut()
+                        )
+                    },
+                    label = "main-header-transition"
+                ) { isChatPage ->
+                    if (isChatPage) {
+                        MainHeader(
+                            showProfile = false,
+                            showMenuButton = true
+                        )
+                    } else {
+                        MainHeader()
+                    }
                 }
             },
 
