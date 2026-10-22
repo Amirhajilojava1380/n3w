@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,6 +67,14 @@ fun ChatScreen(
     val messages = remember { mutableStateListOf<ChatMessage>() }
     val inputFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    DisposableEffect(Unit) {
+        onDispose {
+            focusManager.clearFocus(force = true)
+            keyboardController?.hide()
+        }
+    }
 
     fun sendMessage() {
         val message = messageText.trim()
@@ -77,7 +88,6 @@ fun ChatScreen(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFFF5FAFF))
-            .navigationBarsPadding()
     ) {
         Box(
             modifier = Modifier
@@ -115,7 +125,9 @@ fun ChatScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 0.dp),
+                    .padding(horizontal = 8.dp, vertical = 0.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
                 shape = RoundedCornerShape(32.dp),
                 color = Color.White,
                 border = BorderStroke(0.5.dp, Color(0xFFE1E5EA)),
