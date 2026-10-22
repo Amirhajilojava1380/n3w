@@ -1,20 +1,32 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/
-.DS_Store
+# Gradle and build output
+.gradle/
+.gradle-user-home/
 /build
 /app/build
 /app/release/
-.gradle-user-home/
 .kotlin/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+
+# OS and generated native files
+.DS_Store
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+
+# Packages, logs, and profiling output
+*.aab
+*.apk
+*.log
+output-metadata.json
+*.hprof
+
+# Keystore and service credentials
+*.jks
+*.keystore
+google-services.json
