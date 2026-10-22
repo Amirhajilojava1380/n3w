@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -31,15 +33,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardActions
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.LayoutDirection
 import com.example.w3m.R
 import com.example.w3m.feature.intro.presentation.screen.ui.theme.Yekan
 
@@ -102,13 +104,16 @@ fun ChatScreen(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        androidx.compose.runtime.CompositionLocalProvider(
+            LocalLayoutDirection provides LayoutDirection.Ltr
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
             Box {
                 IconButton(
                     onClick = { showAttachmentMenu = true },
@@ -139,70 +144,78 @@ fun ChatScreen(
                 }
             }
 
-            Surface(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(28.dp),
-                color = Color.White,
-                shadowElevation = 1.dp
-            ) {
-                TextField(
-                    value = messageText,
-                    onValueChange = {
-                        messageText = it
-                        isListening = false
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            text = if (isListening) "در حال ضبط صدا..." else "پیام خود را بنویسید...",
-                            fontFamily = Yekan,
-                            fontSize = 16.sp,
-                            color = Color(0xFF8B96A7)
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(28.dp),
+                    color = Color.White,
+                    shadowElevation = 1.dp
+                ) {
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        LocalLayoutDirection provides LayoutDirection.Rtl
+                    ) {
+                        TextField(
+                            value = messageText,
+                            onValueChange = {
+                                messageText = it
+                                isListening = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = {
+                                Text(
+                                    text = if (isListening) "در حال ضبط صدا..." else "پیام خود را بنویسید...",
+                                    fontFamily = Yekan,
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF8B96A7)
+                                )
+                            },
+                            singleLine = false,
+                            maxLines = 4,
+                            textStyle = androidx.compose.ui.text.TextStyle(
+                                fontFamily = Yekan,
+                                fontSize = 16.sp,
+                                color = Color(0xFF111827)
+                            ),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { sendMessage() }),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            )
                         )
-                    },
-                    singleLine = false,
-                    maxLines = 4,
-                    textStyle = androidx.compose.ui.text.TextStyle(
-                        fontFamily = Yekan,
-                        fontSize = 16.sp,
-                        color = Color(0xFF111827)
-                    ),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { sendMessage() }),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
-                    )
-                )
-            }
-
-            IconButton(
-                onClick = {
-                    if (messageText.isNotBlank()) {
-                        sendMessage()
-                    } else {
-                        isListening = !isListening
                     }
-                },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = if (messageText.isNotBlank()) Color(0xFF111111) else Color(0xFFEFF2F6),
-                        shape = CircleShape
+                }
+
+                IconButton(
+                    onClick = { isListening = !isListening },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFFEFF2F6), CircleShape)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.mic),
+                        contentDescription = "ضبط صدا",
+                        modifier = Modifier.size(24.dp),
+                        tint = if (isListening) Color(0xFF2563EB) else Color(0xFF111827)
                     )
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (messageText.isNotBlank()) R.drawable.send_message else R.drawable.mic
-                    ),
-                    contentDescription = if (messageText.isNotBlank()) "ارسال پیام" else "ضبط صدا",
-                    modifier = Modifier.size(24.dp),
-                    tint = if (messageText.isNotBlank()) Color.White else Color(0xFF111827)
-                )
+                }
+
+                IconButton(
+                    onClick = { sendMessage() },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF111111), CircleShape)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.send_message),
+                        contentDescription = "ارسال پیام",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.White
+                    )
+                }
             }
         }
     }
