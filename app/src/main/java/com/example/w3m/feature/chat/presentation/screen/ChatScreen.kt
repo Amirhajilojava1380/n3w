@@ -1,5 +1,7 @@
 package com.example.w3m.feature.chat.presentation.screen
 
+import android.Manifest
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,7 +75,8 @@ private data class ChatMessage(
 )
 
 private data class ChatAttachment(
-    val uri: Uri,
+    val uri: Uri? = null,
+    val bitmap: Bitmap? = null,
     val isImage: Boolean
 )
 
@@ -116,6 +119,22 @@ fun ChatScreen(
         addAttachments(uris, isImage = false)
         inputFocusRequester.requestFocus()
         keyboardController?.show()
+    }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null && attachments.size < 3) {
+            attachments += ChatAttachment(bitmap = bitmap, isImage = true)
+        }
+        inputFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraLauncher.launch(null)
+        }
     }
     val focusManager = LocalFocusManager.current
     val canSend = messageText.isNotBlank() || attachments.isNotEmpty()
@@ -200,7 +219,7 @@ fun ChatScreen(
                             itemsIndexed(
                                 items = attachments,
                                 key = { index, attachment ->
-                                    "${index}_${attachment.uri}_${attachment.isImage}"
+                                    "${index}_${attachment.uri}_${attachment.bitmap?.hashCode()}_${attachment.isImage}"
                                 }
                             ) { _, attachment ->
                                 Box(
@@ -211,7 +230,7 @@ fun ChatScreen(
                                 ) {
                                     if (attachment.isImage) {
                                         GlideImage(
-                                            model = attachment.uri,
+                                            model = attachment.bitmap ?: attachment.uri,
                                             contentDescription = "پیش‌نمایش تصویر",
                                             modifier = Modifier
                                                 .fillMaxSize()
@@ -246,6 +265,7 @@ fun ChatScreen(
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
                                             .size(24.dp)
+                                            .background(Color.White.copy(alpha = 0.9f), CircleShape)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Close,
@@ -296,12 +316,19 @@ fun ChatScreen(
                                     DropdownMenuItem(
                                         text = { Text("انتخاب تصویر", fontFamily = Yekan) },
                                         leadingIcon = {
-                                            Icon(
-                                                painter = painterResource(R.drawable.image),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(22.dp),
-                                                tint = Color(0xFF111827)
-                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(Color(0xFFEFF2F6), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.image),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(21.dp),
+                                                    tint = Color(0xFF111827)
+                                                )
+                                            }
                                         },
 
                                         onClick = {
@@ -312,16 +339,45 @@ fun ChatScreen(
                                     DropdownMenuItem(
                                         text = { Text("انتخاب فایل", fontFamily = Yekan) },
                                         leadingIcon = {
-                                            Icon(
-                                                painter = painterResource(R.drawable.folder),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(22.dp),
-                                                tint = Color(0xFF111827)
-                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(Color(0xFFEFF2F6), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.folder),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(21.dp),
+                                                    tint = Color(0xFF111827)
+                                                )
+                                            }
                                         },
                                         onClick = {
                                             showAttachmentMenu = false
                                             filePickerLauncher.launch(arrayOf("*/*"))
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("گرفتن عکس", fontFamily = Yekan) },
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .background(Color(0xFFEFF2F6), CircleShape),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.camera),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(21.dp),
+                                                    tint = Color(0xFF111827)
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            showAttachmentMenu = false
+                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                         }
                                     )
                                 }
@@ -398,7 +454,7 @@ fun ChatScreen(
                         Icon(
                             painter = painterResource(
                                 if (canSend) {
-                                    R.drawable.send_up
+                                    R.drawable.arrowupp
                                 } else {
                                     R.drawable.mic
                                 }
@@ -433,7 +489,7 @@ fun ChatScreen(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     GlideImage(
-                        model = image.uri,
+                        model = image.bitmap ?: image.uri,
                         contentDescription = "تصویر بزرگ شده",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
